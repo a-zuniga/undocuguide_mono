@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UndocuGuide</title>
+    <link rel="stylesheet" href="static/styles.css"> 
+</head>
+<body>
+    <ul>
+      <li><a href="/">Home</a></li>
+    </ul>
+    <h1>Scholarships</h1>
+    <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Deadline</th>
+            <th>URL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for scholarship in scholarships %}
+          <tr>
+            <td>{{ scholarship.name }}</td>
+            <td>{{ scholarship.description }}</td>
+            <td>${{ scholarship.amount }}</td>
+            <td>{{ scholarship.deadline }}</td>
+            <td>{{ scholarship.url }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    
+</body>
+</html>
