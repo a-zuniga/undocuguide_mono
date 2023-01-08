@@ -5,4 +5,3 @@ class Scholarship:
         self.amount = amount
         self.deadline = deadline
         self.url = url
-
