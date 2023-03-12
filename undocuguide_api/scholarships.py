@@ -2,16 +2,19 @@ from flask import Blueprint, request, jsonify
 from models import Scholarship
 from db_operations import *
 from models import scholarship_schema
+import json
 from jsonschema import validate, SchemaError, FormatChecker
+from bson.objectid import ObjectId
 
 scholarships = Blueprint('scholarships', __name__)
 
 @scholarships.route('/scholarships', methods=['GET'])
-def list_scholarships():
+def get_scholarships():
     """
     list all scholarships in the database.
     """
     scholarship_list = []
+    # There eventually should be a limit to how many resources we query.  
     for scholarship in scholarship_collection.find():
         # Convert the ObjectId fields to strings
         scholarship['_id'] = str(scholarship['_id'])
@@ -33,44 +36,41 @@ def create_scholarship():
     
 
 @scholarships.route('/scholarships/<scholarship_id>', methods=['GET'])
-def read_scholarship(scholarship_id):
+def get_scholarship(scholarship_id):
     scholarship = read_scholarship_from_db(scholarship_id)
-    if scholarship:
-        return jsonify(scholarship)
-    else:
-        return jsonify({'message': 'Scholarship not found'}), 404
+    # Turn to string to avoid Serialize error
+    scholarship['_id'] = str(scholarship['_id'])
+    return jsonify(scholarship)
         
-
-@scholarships.route('/scholarships/<scholarship_id>', methods=['PUT'])
-def update_scholarship(scholarship_id):
-    data = request.get_json()
+@scholarships.route('/scholarships/<scholarship_id>', methods=['PATCH'])
+def patch_scholarship(scholarship_id):
+    user_request = request.get_json()
+    
+    # Make sure request properties are valid for the schema
+    # TODO: add type validation for schema request
     try:
-        validate(data, scholarship_schema, format_checker=FormatChecker())
+        for entry in user_request:
+            if entry not in scholarship_schema['properties']:
+                raise SchemaError()
     except SchemaError as e:
         return jsonify({'message': f'Schema validation error: {e}'}), 400
+    
+    updated_scholarship = update_scholarship_in_db(scholarship_id, user_request)
 
-    scholarship = read_scholarship_from_db(scholarship_id)
-    if scholarship:
-        data = request.get_json()
-        if not data:
-            return jsonify({'message': 'No input data provided'}), 400
-        
-        # Validate the input data using the schema
-        # errors = scholarship_schema.validate(data)
-        # if errors:
-        #     return jsonify(errors), 400
-
-        updated_scholarship = Scholarship(name=data['name'], description=data['description'], amount=data['amount'], deadline=data['deadline'], url=data['url'])
-        update_scholarship_in_db(scholarship_id, updated_scholarship)
-        return jsonify({'message': 'Scholarship updated successfully'})
+    # Send user updated resource from db
+    if(updated_scholarship):
+        response = read_scholarship_from_db(scholarship_id)
+        response['_id'] = str(response['_id'])
+        return jsonify(response)
     else:
-        return jsonify({'message': 'Scholarship not found'})
+        return jsonify({'message': 'Scholarship not found'}), 400
 
 @scholarships.route('/scholarships/<scholarship_id>', methods=['DELETE'])
 def delete_scholarship(scholarship_id):
-    scholarship = read_scholarship_from_db(scholarship_id)
-    if scholarship:
-        delete_scholarship_from_db(scholarship_id)
-        return jsonify({'message': 'Scholarship deleted successfully'})
+    deleted_scholarship = delete_scholarship_from_db(scholarship_id)
+    if deleted_scholarship:
+        deleted_scholarship['_id'] = str(deleted_scholarship['_id'])
+        response = jsonify(deleted_scholarship)
+        return response
     else:
-        return jsonify({'message': 'Scholarship not found'})
+        return jsonify({'message': 'Scholarship not found'}), 400
