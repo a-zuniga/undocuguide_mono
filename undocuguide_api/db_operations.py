@@ -17,11 +17,16 @@ def create_scholarship_in_db(scholarship: Scholarship):
 def read_scholarship_from_db(scholarship_id):
     return scholarship_collection.find_one({'_id': ObjectId(scholarship_id)})
 
-def update_scholarship_in_db(scholarship_id, fields_to_update):
+def patch_scholarship_in_db(scholarship_id, fields_to_update):
     update_query = scholarship_collection.find_one_and_update(
     {'_id': ObjectId(scholarship_id)}, 
     {'$set': fields_to_update})
+    return update_query
 
+def update_scholarship_in_db(scholarship_id, scholarship: Scholarship):
+    update_query = scholarship_collection.find_one_and_update(
+    {'_id': ObjectId(scholarship_id)}, 
+    {'$set': scholarship.__dict__})
     return update_query
 
 def delete_scholarship_from_db(scholarship_id):

@@ -41,6 +41,24 @@ def get_scholarship(scholarship_id):
     # Turn to string to avoid Serialize error
     scholarship['_id'] = str(scholarship['_id'])
     return jsonify(scholarship)
+
+@scholarships.route('/scholarships/<scholarship_id>', methods=['PUT'])
+def update_scholarship(scholarship_id):
+    # Since PUT requests replaces an entire entity, we need to make sure the incoming schema is valid
+    data = request.get_json()
+    try:
+        validate(data, scholarship_schema, format_checker=FormatChecker())
+    except SchemaError as e:
+        return jsonify({'message': f'Schema validation error: {e}'}), 400
+
+    new_scholarship = Scholarship(name=data['name'], description=None, amount=data['amount'], deadline=data['deadline'], url=data['url'])
+    entity_update = update_scholarship_in_db(scholarship_id, new_scholarship)
+    
+    if entity_update:
+        entity_update['_id'] = str(entity_update['_id'])
+        return jsonify(entity_update)
+    else:
+        return jsonify({'message': 'Scholarship not found'}), 400
         
 @scholarships.route('/scholarships/<scholarship_id>', methods=['PATCH'])
 def patch_scholarship(scholarship_id):
@@ -55,7 +73,7 @@ def patch_scholarship(scholarship_id):
     except SchemaError as e:
         return jsonify({'message': f'Schema validation error: {e}'}), 400
     
-    updated_scholarship = update_scholarship_in_db(scholarship_id, user_request)
+    updated_scholarship = patch_scholarship_in_db(scholarship_id, user_request)
 
     # Send user updated resource from db
     if(updated_scholarship):
