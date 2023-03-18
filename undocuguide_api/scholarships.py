@@ -16,10 +16,14 @@ def get_scholarships():
     scholarship_list = []
     # There eventually should be a limit to how many resources we query.  
     for scholarship in scholarship_collection.find():
-        # Convert the ObjectId fields to strings
-        scholarship['_id'] = str(scholarship['_id'])
-        scholarship_list.append(scholarship)
-    return jsonify(scholarship_list)
+        # Convert the ObjectId fields to strings and rename '_id' to 'id'
+        scholarship['id'] = str(scholarship.pop('_id'))
+        scholarship_list.append(scholarship)  
+    response = jsonify(scholarship_list)
+    # Allows pagination on react-admin
+    response.headers['Content-Range'] = f'scholarships 0-{len(scholarship_list)-1}/{len(scholarship_list)}'
+    return response
+
 
 
 @scholarships.route('/scholarships', methods=['POST'])
