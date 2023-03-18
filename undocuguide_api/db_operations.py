@@ -32,3 +32,6 @@ def update_scholarship_in_db(scholarship_id, scholarship: Scholarship):
 def delete_scholarship_from_db(scholarship_id):
     deleted_scholarship = scholarship_collection.find_one_and_delete({'_id': ObjectId(scholarship_id)})
     return deleted_scholarship
+
+def find_scholarship_by_name(name):
+    return scholarship_collection.find_one({'name': name})

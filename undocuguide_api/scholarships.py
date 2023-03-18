@@ -36,15 +36,19 @@ def create_scholarship():
 
     new_scholarship = Scholarship(name=data['name'], description=data['description'], amount=data['amount'], deadline=data['deadline'], url=data['url'])
     create_scholarship_in_db(new_scholarship)
-    return jsonify({'message': 'Scholarship created successfully'})
+    scholarship = find_scholarship_by_name(data['name'])
+    scholarship['id'] = str(scholarship.pop('_id'))
+    response = jsonify(scholarship)
+    return response
     
 
 @scholarships.route('/scholarships/<scholarship_id>', methods=['GET'])
 def get_scholarship(scholarship_id):
     scholarship = read_scholarship_from_db(scholarship_id)
     # Turn to string to avoid Serialize error
-    scholarship['_id'] = str(scholarship['_id'])
-    return jsonify(scholarship)
+    scholarship['id'] = str(scholarship.pop('_id'))
+    response = jsonify(scholarship)
+    return response
 
 @scholarships.route('/scholarships/<scholarship_id>', methods=['PUT'])
 def update_scholarship(scholarship_id):
